@@ -2,31 +2,100 @@
 
 ## Foreword
 
-The style guides in this project represent best practices acquired over decades of development experience at technology companies including [Oracle](https://en.wikipedia.org/wiki/Oracle_Corporation) (SQL databases), [Openwave](https://en.wikipedia.org/wiki/Openwave) (Mobile Internet gateways), [Apple](https://en.wikipedia.org/wiki/Apple_Inc.) (Mac / iPhone), and [Disney](https://en.wikipedia.org/wiki/The_Walt_Disney_Company) (Media / Theme parks).
+These guides represent best practices refined over decades experience at top technology companies including Oracle, Apple, and Disney. Having participated on projects in C / C++ / SQL / PL/SQL / Java / Python / JavaScript / Go / TypeScript / Objective-C and Swift, for user bases ranging from dozens to over a billion, running on hardware ranging from mobiles to mainframes. We have professionally encountered an endless variety of coding styles, development strategies, and organizational requirements.
 
-Having contributed to projects written in C / C++ / SQL / PL/SQL / Java / Python / JavaScript / Go / TypeScript / Objective-C and Swift, for small companies to multinationals, on hardware ranging from mobile to mainframes, I have professionally encountered a boundless variety of coding styles, development strategies, and organizational requirements.
+These documents will not be a one-size-fits-all; legacy code, language paradigms, organizational constraints, development team makeup, all preclude the existence of a single strategy. Rather, these guides serve as a blueprint for what wd have seen work best in most scenarios.
 
-These documents are not a one-size-fits-all; legacy code, language characteristics, organizational constraints, development team makeup, all preclude the existence of a golden strategy. These documents serve as a guideline for what I have seen works best in most scenarios.
+## GRUNT Principal
 
-## Overview
-
-Following the guidelines within should result in code that is:
+Following the recommendations presented should result in code that is:
 
 * [Grokable](https://en.wikipedia.org/wiki/Grok)
 * [Refactorable](https://en.wikipedia.org/wiki/Code_refactoring)
+* [Unit Testable](https://en.wikipedia.org/wiki/Software_testability)
 * [Normalized](https://en.wikipedia.org/wiki/Database_normalization)
 * [Tunable](https://en.wikipedia.org/wiki/Performance_tuning)
-* [Testable](https://en.wikipedia.org/wiki/Software_testability)
 
-These are the main characteristics of future-proof code. No code exists forever, it will change over time, but code exhibiting these 5 qualities has an innate capacity to evolve and adapt, while code which lacks these will eventually have to be discarded as technology evolves due either to an inability to adopt or to accelerated accumulation of technical debt. This is what I would consider a "natural" pattern in software development; minimal object graphs with limited state are inherently stable, while broad object graphs with state dependencies are inherently unstable.
+These as the GRUNT principals and are the characteristics of future-proof code. No code exists forever, it will change over time, but code exhibiting these qualities has an innate capacity to evolve and adapt, while code which lacks any of these will attract technical debt and eventually become obsolete. 
+
+The golden rule of software development is minimal object graphs with minimal state are inherently stable and malleable, while broad object graphs with broad dependencies are inherently unstable and rigid. We have encountered this pattern countless times; complexity hastens obsolescence.
+
+## Other Principals
+
+### SOLID
+
+We agree with single responsibility and interface segregation, this is the "normalized" aspect of GRUNT, but the remaining [SOLID](https://en.wikipedia.org/wiki/SOLID) recommendations are magnets for technical debt.
+
+### YAGNI
+
+We agree with the simplicity focus of [YAGNI](https://en.wikipedia.org/wiki/YAGNI), but the "continuous refactoring" assumption never holds in practice. GRUNT places focuses on single responsibility which would typically not happen under YAGNI approaches leading to duplicated code.
+
+## MSCV Architecture
+
+GRUNT recommends using the 4-tier MSCV architecture:
+
+* Model: I/O unit representation including serialization logic
+  - dependencies: other models
+* Service: Manages model layer I/O to a service provider (ie. network, disk)
+  - dependencies: models + other services
+* Coordinator: Manages view layer I/O between the service layer and scenes (ie. screen, glasses, printer)
+  - dependencies: views + services + other coordinators
+* View: UI definition including layout logic
+  - dependencies: other views
+
+Visually, this can be represented as:
+
+```text
+MODEL <- SERVICE <- COORDINATOR -> VIEW
+```
+
+This is a "need-to-know" based architecture, model and views do not know about anything other than models and views respectively. Services only know about models and other services. Only coordinators know about all layers. This pattern is designed to impede inheritance and limit creep of the object graph. The scopes of responsibility are clearly delineated and against-pattern attempts to embed service, model, or view functionality in the coordinator is highly discoverable since it must be access with xModel::x, xService::x, or xView::x prefixing.
+
+## Other Architecture
+
+### MVVM
+
+MVVM and it's related approaches attempt to create a unidirectional flow of logic. The concept has merit since it attempts to limit stateful changes, but the implementation explodes the object graph and vastly increases cognitive complexity. This violates all of GRUNT with the possible exception of testing, as such we discourage using MVVM.
+
+## Terminology
+
+We reference some  terminology in my arguments, here's a legend of what they represent:
+
+- bug surface:
+  - code in which bugs could potentially exist
+
+- fixtures
+  - data that mimics device I/O (eg. network, disc, memory)
+
+- mocks
+  - fake object instances that mimic real object instances
+
+- grokability
+  - how well does a block of code express it's purpose at a glance
+
+- future-proof
+  - code that is unlikely to require changes when modifying application behavior or adding features
+
+- normalized
+  - the breaking down of logical units to the atomic, single purpose level
+
+- [bit rot](https://en.wikipedia.org/wiki/Software_rot)
+
+- [technical debt](https://en.wikipedia.org/wiki/Technical_debt))
+
+- cognitive complexity
+  - size of the call stack and branch permutations when manually reading source code
+
+- object graph
+  - the combined depth of inheritance chains (ie. class, subclasses) and parameterized inheritance (ie. function taking a class as a parameter)
 
 ## Recommendations
 
-The inspiration for many of these recommendations stem from UNIX system programming. The following are high level generic recommendations:
+The following are broad generic guidelines:
 
-* Simplicity is better and harder than complexity
-    If you cannot explain what a code block does does in 1-2 sentences, simplify it.
-* Self-documenting code is only self-documenting to the author, and only for a few months after writing it
+* Simplicity beats complexity
+    If you cannot explain what a code block does in 1-2 sentences, continue to simplify it.
+* Self-documenting code is a myth, after a year, even the authors have mentally unravel their code 
     Developers are not compilers, and rarely have the time or inclination to parse your code to derive your intentions. Comments, even wrong / old / incomplete comments, convey information that code cannot. Your code documents the "how", your comments document the "why, when, and what"
 * Write non-UI logic as though it was destined for a command line program
     Assume you are writing server side code. Request in, response out. Isolated logic is easier to test and adapt since it is not tied to a UI state chart
@@ -43,12 +112,10 @@ The inspiration for many of these recommendations stem from UNIX system programm
 * Follow the patterns recommended by the platform owners
     Do not fight the recommendations of the platform maintainers (ie. Apple, Google, Microsoft). In the long term, the platform maintainer is *always* going to be right. If a pattern leads to a poor outcome, you are almost certainly the cause, not the pattern. The choices are to do it as recommended now, or invest effort in a "different" approach that will eventually have to be replaced with the recommended approach
 * Test deep, not shallow
-    Unit tests should test the call stack (aka. "to the wire"), not just the first logic layer. If a function relies on a deep call stack, test all the logic layers in that stack to the point just prior to an externality occurring. A real world example would be testing that an electric socket has 3 prongs, but not testing if the socket is physically connected to then electrical panel.
-
-    > Bug Surface: I'm not sure when I acquired this term, I don't think I coined it, but bug surface describes code in which bugs could potentially exist.
+    Unit tests should test the call stack, not just the first call. If a function relies on a deep call stack, test all the logic layers to the point prior to an externality occurring. A real world example would be testing that an electric socket has 3 prongs, and is flush with the wall, but not testing if the socket is connected to then electrical panel.
 
 ## Summary
 
-I will confess to not always following these guidelines, my GitHub account contains many projects that are a testament to that. Simple is typically harder than complex. It takes more thinking and planning to achieve simplicity. However, when these guidelines are followed, the code bases that result are easier to onboard developers on, have fewer bugs, are more flexible, have lower levels of [bit rot](https://en.wikipedia.org/wiki/Software_rot), and resist the accumulation of [https://en.wikipedia.org/wiki/Technical_debt](technical debt).
+My GitHub account contains many projects that show me not always following these guidelines. It takes significant thought and planning to achieve simplicity and maintainability. If you are writing long term code that will be developed in a team setting, then it is worth expending additional effort to follow GRUNT and MSCV. Code bases that follow these guidelines will be easier to onboard developers on, have fewer bugs, be more flexible, have lower levels of bit rot, and resist the accumulation of technical debt.
 
-Keep things simple, do one thing at a time, do not hide implementations, leverage the compiler, and keep cognitive overhead constrained so developers can focus on the task they're working on.
+Keep things simple, do one thing at a time, do not hide implementations, leverage the compiler, and keep cognitive overhead low so developers can focus on the task they're working on.
