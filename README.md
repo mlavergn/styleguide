@@ -2,11 +2,13 @@
 
 ## Foreword
 
-These guides represent best practices refined over decades experience at top technology companies including Oracle, Apple, and Disney. Having participated on projects in C / C++ / SQL / PL/SQL / Java / Python / JavaScript / Go / TypeScript / Objective-C and Swift, for user bases ranging from dozens to over a billion, running on hardware ranging from mobiles to mainframes. We have professionally encountered an endless variety of coding styles, development strategies, and organizational requirements.
+These guides is the culmination of best practices gleaned over decades experience at technology companies including Oracle, Apple, and Disney. Having participated on projects in C / C++ / SQL / PL/SQL / Java / Python / JavaScript / Go / TypeScript / Objective-C and Swift, for user bases ranging from dozens to over a billion, running on hardware ranging from mobiles to mainframes. We have first hand experience with an endless variety of coding styles, development strategies, and organizational requirements.
 
 These documents will not be a one-size-fits-all; legacy code, language paradigms, organizational constraints, development team makeup, all preclude the existence of a single strategy. Rather, these guides serve as a blueprint for what wd have seen work best in most scenarios.
 
-## GRUNT Principal
+## GRUNT Principals
+
+*Readable means reliable - Rob Pike*
 
 Following the recommendations presented should result in code that is:
 
@@ -16,23 +18,31 @@ Following the recommendations presented should result in code that is:
 * [Normalized](https://en.wikipedia.org/wiki/Database_normalization)
 * [Tunable](https://en.wikipedia.org/wiki/Performance_tuning)
 
-These as the GRUNT principals and are the characteristics of future-proof code. No code exists forever, it will change over time, but code exhibiting these qualities has an innate capacity to evolve and adapt, while code which lacks any of these will attract technical debt and eventually become obsolete. 
+These are the GRUNT principals and are the characteristics of future-proof code. No code exists forever, it will change over time, but code exhibiting these qualities has an innate capacity to evolve and adapt, while code which lacking these will attract technical debt and eventually become obsolete. The overarching reason for this future-proof-ness is simplicity. However, simplicity is not equivalent to simple. Simplicity means programming an unwavering focus on architectural coherence. 
 
-The golden rule of software development is minimal object graphs with minimal state are inherently stable and malleable, while broad object graphs with broad dependencies are inherently unstable and rigid. We have encountered this pattern countless times; complexity hastens obsolescence.
+### Grokable
 
-## Other Principals
+Grokable is measure of understandability or cognitive complexity. Under GRUNT, complexity is considered to be use of opaque constructs. Opaque constructs hinder readability by hiding implementation details. The GRUNT principal is that it should be immediately apparent what a code block does and how it does it.
 
-### SOLID
+### Refactorable
 
-We agree with single responsibility and interface segregation, this is the "normalized" aspect of GRUNT, but the remaining [SOLID](https://en.wikipedia.org/wiki/SOLID) recommendations are magnets for technical debt.
+In software engineering, minimal object graphs with minimal state are inherently stable and malleable, while broad object graphs with broad dependencies are inherently unstable and rigid. This is a universal truth that we have encountered this pattern countless times. GRUNT eschews inheritance in favor of encapsulation. Object trees should be shallow to minimize the levels of indirection. 
 
-### YAGNI
+### Unitized Logic
 
-We agree with the simplicity focus of [YAGNI](https://en.wikipedia.org/wiki/YAGNI), but the "continuous refactoring" assumption never holds in practice. GRUNT places focuses on single responsibility which would typically not happen under YAGNI approaches leading to duplicated code.
+Under GRUNT, unit-logic is an expression of the functional units should be logical units. In other words, functions are to be designed as input-output or event-reaction units. State modification units are highly discouraged. It is impossible to design applications without state modification units, the main function is a canonical example of a state modification unit.
+
+### Normalized
+
+Normalization is a single source of truth (SSOT) construct that applies to the object graph. GRUNT aims to achieve object normalization with the goal of each piece of information belonging to a single unit. 
+
+### Tunable
+
+As we approach the limits of the nm scale, we are witnessing the inevitable end of Moore's Law. Cloud computing delayed the need for focus on performance tuning, but horizontal scale is reaching it's limits as the cost of distributing increasingly expensive tasks runs into diminishing returns. Performance tuning will become an ever increasing factor in software development. GRUNT enables tunability via it's granular approach to segmenting logic. One of the primary challenges in performance tuning is isolating bottlenecks and relieving bottlenecks without requiring architectural changes to applications. GRUNT leverages encapsulation, SSOT, unitized logic, and shallow object graphs to enable targeted optimization efforts.
 
 ## MSCV Architecture
 
-GRUNT recommends using the 4-tier MSCV architecture:
+GRUNT should be paired with the 4-tier Model-Service-Coordinator-View (MSCV) architecture. 
 
 * Model: I/O unit representation including serialization logic
   - dependencies: other models
@@ -49,13 +59,11 @@ Visually, this can be represented as:
 MODEL <- SERVICE <- COORDINATOR -> VIEW
 ```
 
-This is a "need-to-know" based architecture, model and views do not know about anything other than models and views respectively. Services only know about models and other services. Only coordinators know about all layers. This pattern is designed to impede inheritance and limit creep of the object graph. The scopes of responsibility are clearly delineated and against-pattern attempts to embed service, model, or view functionality in the coordinator is highly discoverable since it must be access with xModel::x, xService::x, or xView::x prefixing.
+MSCV is simply a localized abstraction of the universal real world application use pattern. A more familiar representation would be:
 
-## Other Architecture
+Disk <- Server <- Device -> User 
 
-### MVVM
-
-MVVM and it's related approaches attempt to create a unidirectional flow of logic. The concept has merit since it attempts to limit stateful changes, but the implementation explodes the object graph and vastly increases cognitive complexity. This violates all of GRUNT with the possible exception of testing, as such we discourage using MVVM.
+This is a need-to-know (N2K) based architecture. Models and views do not know about anything other than models and views respectively. Services only know about models and other services. Coordinators know about all layers. Views only know about other views while exposing an I/O protocol. This pattern is designed to impede the growth of the object graph and disambiguate scopes of responsibility. The clear delineations on which objects can talk to which objects make attempts to embed service, model, or view functionality in the coordinator is highly discoverable since it must be access with xModel::x, xService::x, or xView::x prefixing.
 
 ## Terminology
 
@@ -69,15 +77,6 @@ We reference some  terminology in my arguments, here's a legend of what they rep
 
 - mocks
   - fake object instances that mimic real object instances
-
-- grokability
-  - how well does a block of code express it's purpose at a glance
-
-- future-proof
-  - code that is unlikely to require changes when modifying application behavior or adding features
-
-- normalized
-  - the breaking down of logical units to the atomic, single purpose level
 
 - [bit rot](https://en.wikipedia.org/wiki/Software_rot)
 
@@ -93,7 +92,7 @@ We reference some  terminology in my arguments, here's a legend of what they rep
 
 The following are broad generic guidelines:
 
-* Simplicity beats complexity
+* Simplicity bests complexity
     If you cannot explain what a code block does in 1-2 sentences, continue to simplify it.
 * Self-documenting code is a myth, after a year, even the authors have mentally unravel their code 
     Developers are not compilers, and rarely have the time or inclination to parse your code to derive your intentions. Comments, even wrong / old / incomplete comments, convey information that code cannot. Your code documents the "how", your comments document the "why, when, and what"
