@@ -1,0 +1,182 @@
+# SwiftLint configuration
+# Derived from SWIFTSTYLE.md — code conforms to the guide, not the reverse.
+# Rule reference: https://realm.github.io/SwiftLint/rule-directory.html
+#
+# Layout: scope, then opt-in/disabled/analyzer rule lists (sorted within logical groups),
+# then per-rule configuration, then custom regex rules for bans SwiftLint can't express.
+
+excluded:
+  # SwiftLint resolves `excluded` globs RELATIVE TO THIS CONFIG FILE'S DIRECTORY
+  # (styleguide/), not the repo root or the CWD swiftlint runs from. Since the build
+  # artifacts live one level up (repo-root/<package>/.build/…, repo-root/build, …), the
+  # globs must climb out of styleguide/ with "../". A bare "**/.build/**" would only ever
+  # match styleguide/**/.build/** — i.e. nothing — which silently left 557 generated files
+  # (SPM .build runners + checkouts) getting linted with thousands of spurious violations.
+  #
+  # The "/**" *contents* glob is what reliably drops files inside a nested SPM ".build/" in
+  # a multi-package repo (e.g. PackageA/.build/.../runner.swift); a bare directory glob does
+  # not exclude the files within on all versions. SPM dependency `checkouts/` live under
+  # each package's `.build/`, so excluding `.build` excludes them too.
+  - "../**/.build/**"
+  - "../**/build/**"
+  - "../**/DerivedData/**"
+  # Root-level output dirs (also relative to styleguide/, hence "../").
+  - "../.build"
+  - "../build"
+  - "../Carthage"
+  - "../DerivedData"
+  - "../Pods"
+
+# === Opt-in rules (grouped by the guide intent they serve; sorted within each group) ===
+opt_in_rules:
+  # Documentation: "Every method and property should have a /// doc comment."
+  - missing_docs
+
+  # Error Handling: no force operations — surface or log errors instead.
+  - force_unwrapping
+
+  # Collection & functional idioms: prefer expressive stdlib over manual loops/counts.
+  - contains_over_filter_count
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - first_where
+  - flatmap_over_map_reduce
+  - last_where
+  - reduce_into
+  - redundant_nil_coalescing
+  - sorted_first_last
+
+  # Naming & clarity (SWIFTSTYLE.md "Naming").
+  - explicit_init
+  - identical_operands
+  - prefer_self_in_static_references
+  - toggle_bool
+  - yoda_condition
+
+  # Concurrency: prefer async/await, Sendable.
+  - discouraged_optional_boolean
+
+  # Whitespace & formatting hygiene.
+  - closure_spacing
+  - collection_alignment
+  - multiline_arguments_brackets
+  - operator_usage_whitespace
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+
+  # Safety diagnostics.
+  - fatal_error_message
+
+# Some opt-in names above may not exist in every SwiftLint version; remove any that error.
+
+disabled_rules:
+  - redundant_type_annotation   # Formatting: explicit type annotations are REQUIRED, not redundant.
+  - todo                        # TODO/FIXME tracking is out of scope for style enforcement.
+  - trailing_comma              # Trailing commas are allowed (cleaner diffs on multiline literals).
+  - type_body_length            # Type size is a design judgement, not a style rule we enforce.
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+
+# === Per-rule configuration ===
+
+# Error Handling: force operators are banned everywhere, including tests.
+force_cast: error
+force_try: error
+force_unwrapping:
+  severity: error
+
+# Documentation: require docs on public AND internal declarations.
+missing_docs:
+  warning:
+    - open
+    - public
+    - internal
+  excludes_extensions: true
+  excludes_inherited_types: true
+
+# Naming — Types: UpperCamelCase (3+ chars); acronyms (URL, API, UUID) keep all-caps.
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+  validates_start_with_lowercase: error
+
+# Naming — identifiers: lowerCamelCase; allow a few short conventional names.
+identifier_name:
+  min_length:
+    warning: 2          # allow id, db, ok
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  allowed_symbols: []
+  excluded:
+    - id
+    - db
+    - ok
+    - to
+    - up
+
+# Sizing & complexity thresholds.
+cyclomatic_complexity:
+  warning: 15
+  error: 20
+file_length:
+  # Full HeaderDoc (a /// what-line plus - Parameters:/- Returns: on every method) is
+  # mandatory, which inflates file length; 400 became a genuine rule misfit, so the shared
+  # cap is 500 (SWIFTSTYLE.md E.1.a). --strict escalates the warning, so it is the real cap.
+  warning: 500
+  error: 1000
+function_parameter_count:
+  # Services here take several injected collaborators; the default of 5 is too tight.
+  warning: 8
+  error: 10
+line_length:
+  warning: 1000         # signatures/calls stay on one line — give them room
+  ignores_comments: true
+  ignores_urls: true
+nesting:
+  type_level: 2
+
+# === Custom rules for guide-specific bans SwiftLint can't express natively (sorted by name) ===
+custom_rules:
+  no_filesystem_synchronized_groups:
+    name: "No file-system synchronized groups"
+    regex: 'PBXFileSystemSynchronizedRootGroup|fileSystemSynchronizedGroups'
+    message: "Use explicit PBXGroups, not file-system synchronized groups (SWIFTSTYLE.md: Project Layout)."
+    severity: error
+
+  no_fixed_frame_size:
+    name: "Avoid hardcoded SwiftUI frame sizes"
+    # Flag only FIXED width:/height: literals (they break across platforms/accessibility).
+    # min/max width/height are structural floors/ceilings, not fixed sizes — allowed.
+    regex: '\.frame\(\s*(width|height):\s*\d'
+    message: "Do not hardcode fixed widths/sizes; let content size itself (use min/max floors instead) (SWIFTSTYLE.md: SwiftUI)."
+    severity: warning
+
+  no_print:
+    name: "Use os_log.debug() not print()"
+    regex: '(?<![\w.])print\s*\('
+    message: "Service/model code must not call print(); use os_log.debug() so output stays out of release builds (SWIFTSTYLE.md: App Structure)."
+    match_kinds:
+      - identifier
+    severity: warning
+
+  no_swallowed_try:
+    name: "Do not swallow errors with try?"
+    # \btry\? covers `= try?`, `_ = try?`, and bare `try?` — handle, surface, or os_log.debug() instead.
+    regex: '\btry\?'
+    message: "Never silently discard an error — handle, surface, or os_log.debug() it (SWIFTSTYLE.md: Error Handling)."
+    severity: warning
+
+  result_suffix_model:
+    name: "Models use the Model suffix, not Result"
+    regex: '\b(struct|class)\s+\w+Result\b'
+    message: "Models use the Model suffix, never Result (SWIFTSTYLE.md: Naming)."
+    severity: warning
+
+reporter: "xcode"

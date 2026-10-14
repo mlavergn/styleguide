@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "avoid-as": "warn",
+    "case-convention": "warn",
+    "empty-file": "warn",
+    "homeless-try": "warn",
+    "line-length": "off",
+    "must-return-ref": "warn",
+    "no-catch-return": "warn",
+    "no-return-try": "off",
+    "no-unresolved": "warn",
+    "returned-stack-reference": "warn",
+    "suppressed-errors": "warn",
+    "unsafe-undefined": "off",
+    "unused-decls": "warn",
+    "useless-error-return": "warn"
+  }
+}
