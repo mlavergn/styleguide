@@ -192,6 +192,22 @@ pub fn jsonStringify(self: *const Self, writer: anytype) !void {
 
 ## E. Quality, Tooling & Frontend
 
+### E.1 Documentation & Comments
+
+- E.1.a. **Give every public declaration a `///` doc comment.** `///` documents the declaration that follows (functions, constants, types, and struct fields); `//!` documents the enclosing module at the top of the file; `//` is for inline comments in bodies. Zig autodoc (`zig build-docs`) generates the docset from these `///` comments.
+
+- E.1.b. **Document what, not how — including every parameter and the return value.** The summary states what the function does (its purpose and contract), never how it is implemented; follow it with a blank `///` line, then one backticked-name bullet per parameter (`` - `name`: … ``) and a `- Returns:` line whenever it returns a value. Functions that take no parameters and return `void` need only the summary. This is Zig autodoc's rendering of the same directive as SWIFTSTYLE E.1.b (what / parameters / return), so a docset generates from either toolchain.
+
+```zig
+/// Create a callback face over `io`.
+///
+/// - `io`: The I/O implementation in-flight work runs on.
+/// - Returns: The initialised value.
+pub fn init(io: Io) Self {
+    // Build the face   <- inline uses //, not ///
+}
+```
+
 ### E.4 Testing Standards & Test Data
 
 - E.4.a. Tests sit at the bottom of the file after a divider (`// ---` then `// Unit Tests`). Each test uses `std.testing.allocator`; sets up dependencies with a `defer deinit()` for each; exercises the struct; asserts with `std.testing.expectEqual` / `expectEqualStrings`. Tests initialize the full dependency chain rather than mocking; shared fixtures (paths, constants) live in `module.zig`.

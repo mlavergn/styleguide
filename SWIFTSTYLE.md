@@ -197,8 +197,14 @@ log.debug("parsed \(count) items")   // debug level: omitted from release output
 
 - E.1.a. **Give every method and property a `///` doc comment.** `///` for doc comments on declarations only; `//` for inline comments in bodies.
 
+- E.1.b. **Document what, not how — including every parameter and the return value.** The summary states what the member does (its purpose and contract), never how it is implemented. For every method and initializer, add a `- Parameters:` entry for each parameter and a `- Returns:` line whenever it returns a value (computed properties that return a value included). Members that take no parameters and return no value need only the summary line.
+
 ```swift
-/// Fetch a single foo by ID
+/// Fetch a single foo by its identifier.
+/// - Parameters:
+///   - db: The open database handle to query.
+///   - id: The identifier of the foo to fetch.
+/// - Returns: The matching foo, or `nil` when none exists.
 public static func foo(_ db: OpaquePointer, id: String) -> FooModel? {
     // Query the joined view   <- inline uses //, not ///
 }

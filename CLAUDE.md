@@ -16,7 +16,7 @@ None. There is no build, test, lint, or format step for this repo. `Makefile.in`
 
 Flat — every file is at the root.
 
-- `<LANG>STYLE.md` — style guide for a language (`GOSTYLE.md`, `SWIFTSTYLE.md`, `ZIGSTYLE.md`, `SQLSTYLE.md`)
+- `<LANG>STYLE.md` — style guide for a language (`GOSTYLE.md`, `SWIFTSTYLE.md`, `ZIGSTYLE.md`, `SVELTESTYLE.md`, `SQLSTYLE.md`)
 - `<LANG>MIGRATE.md` — version migration notes (`ZIGMIGRATE.md`)
 - `CLAUDESTYLE.md`, `READMESTYLE.md` — **templates**, not guides. Skeletons of HTML comments to fill in when authoring a CLAUDE.md or README.md in another project. Follow their section order.
 - `swiftformat.cfg`, `swiftlint.yml` — the executable half of `SWIFTSTYLE.md`
@@ -37,7 +37,7 @@ Flat — every file is at the root.
 
 ## Project-state heads-ups
 
-- **`swiftlint.yml` `excluded:` globs are `../`-prefixed on purpose.** SwiftLint resolves globs relative to the config file's directory, and this repo is a sibling of the consuming project, so the globs must climb out (`../**/…`, `../*/<root dir>`). A bare `**/.build/**` silently lints hundreds of generated SPM files. Do not "fix" these paths.
+- **`swiftlint.yml` `excluded:` globs are `../`-prefixed on purpose.** SwiftLint resolves globs relative to the config file's directory, and this repo is a sibling of the consuming project, so the globs must climb out (`../**/…`, `../*/<root dir>`). `swiftformat.cfg`'s `--exclude` paths resolve the same way, hence `../*/`. A bare `**/.build/**` silently lints hundreds of generated SPM files. Do not "fix" these paths.
 - The `/**` contents-glob suffix is likewise deliberate — bare directory globs don't exclude nested `.build/` files on all SwiftLint versions.
 - `--disable sortImports` in `swiftformat.cfg` is intentional: `SWIFTSTYLE.md`'s Foundation → Apple → project import order can't be expressed in SwiftFormat, so ordering is left to the author.
 - `Makefile.in` ends with `.DEFAULT_GOAL :=` so the including Makefile's first target stays the default even though the include comes first. Keep that line last.
@@ -48,4 +48,4 @@ Flat — every file is at the root.
 
 - No CI, markdown linting, or link checking.
 - No LICENSE, CONTRIBUTING, or CODEOWNERS.
-- Only Go, Swift, Zig, and SQL are covered. Other languages have no guide yet.
+- Only Go, Swift, Zig, Svelte, and SQL are covered. Other languages have no guide yet.

@@ -20,6 +20,7 @@ That supplies the canonical `make format`, `make lint`, and `make validate`. The
 - [SWIFTSTYLE.md](SWIFTSTYLE.md) — Swift code style and project layout conventions, with a strict UI/logic separation.
 - [ZIGSTYLE.md](ZIGSTYLE.md) — Zig code style and project layout conventions, emphasizing avoidance of deprecated APIs.
 - [ZIGMIGRATE.md](ZIGMIGRATE.md) — Zig SDK upgrade migration notes (API diffs and gotchas per version).
+- [SVELTESTYLE.md](SVELTESTYLE.md) — Svelte 5 code style and component layout (runes, props/callbacks, design tokens).
 - [SQLSTYLE.md](SQLSTYLE.md) — Database schema and normalization conventions (star schema design).
 
 ## Config Files
