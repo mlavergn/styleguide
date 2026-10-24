@@ -1,0 +1,61 @@
+###############################################
+#
+# Makefile Includes
+#
+# The canonical format, lint, and validate targets. A project pulls them in
+# at the top of its Makefile from the sibling styleguide checkout:
+#
+#   # Optional include to extend the makefile targets
+#   -include ../styleguide/Makefile.in
+#
+# The project defines clean, build, and test, which validate runs. Settings
+# below are defaults; a project overrides them after the include.
+#
+###############################################
+
+.PHONY: lint format validate
+
+STYLE_ROOT := ../styleguide
+
+# ---------------------------------------------
+# Configuration
+# ---------------------------------------------
+
+# Directories holding the project's own Zig sources, e.g.
+# `ZIG_DIRS := src cli web host`. Missing ones are skipped.
+ZIG_DIRS ?= src cli web
+
+# Every Zig source the project owns: build.zig plus ZIG_DIRS. zig-pkg/ and
+# the caches are never walked.
+ZIG_FILES ?= $(wildcard build.zig) $(if $(wildcard $(ZIG_DIRS)),$(shell find $(wildcard $(ZIG_DIRS)) -name '*.zig' | sort))
+
+# Sources formatted but never linted, e.g. `LINT_EXCLUDE := src/c_api.zig`.
+LINT_EXCLUDE ?=
+
+# The files the linters see.
+LINT_FILES ?= $(filter-out $(LINT_EXCLUDE),$(ZIG_FILES))
+
+# The files zig fmt rewrites: every source and build.zig.zon.
+FORMAT_FILES ?= $(ZIG_FILES) $(wildcard build.zig.zon)
+
+# ---------------------------------------------
+# Targets
+# ---------------------------------------------
+
+# Full pre-commit gate: clean, format, lint, build, then test. A project
+# adds steps with a prerequisite-only rule, e.g. `validate: cross`.
+validate: clean format lint build test
+	@echo "validate done"
+
+# Format the Zig sources.
+format:
+	zig fmt $(FORMAT_FILES)
+
+# Lint the Zig sources against $(STYLE_ROOT)/zlint.json. Warnings are errors.
+# zlintpre exits 0 even when it reports failures, so its summary is checked.
+lint:
+	@out="$$(zlintpre $(LINT_FILES) 2>&1)"; echo "$$out"; echo "$$out" | grep -q 'found 0 failures' || { echo "lint: zlintpre findings above"; exit 1; }
+	@printf '%s\n' $(LINT_FILES) | zlint -c $(STYLE_ROOT) -S --deny-warnings
+
+# Leave the default goal to the including Makefile's first target.
+.DEFAULT_GOAL :=

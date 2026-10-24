@@ -7,9 +7,10 @@
 
 excluded:
   # SwiftLint resolves `excluded` globs RELATIVE TO THIS CONFIG FILE'S DIRECTORY
-  # (styleguide/), not the repo root or the CWD swiftlint runs from. Since the build
-  # artifacts live one level up (repo-root/<package>/.build/…, repo-root/build, …), the
-  # globs must climb out of styleguide/ with "../". A bare "**/.build/**" would only ever
+  # (styleguide/), not the repo root or the CWD swiftlint runs from. styleguide/ is a
+  # sibling of each consuming project, so the build artifacts live in ../<project>/
+  # (../<project>/<package>/.build/…, ../<project>/build, …), and the globs must climb
+  # out of styleguide/ with "../". A bare "**/.build/**" would only ever
   # match styleguide/**/.build/** — i.e. nothing — which silently left 557 generated files
   # (SPM .build runners + checkouts) getting linted with thousands of spurious violations.
   #
@@ -20,12 +21,12 @@ excluded:
   - "../**/.build/**"
   - "../**/build/**"
   - "../**/DerivedData/**"
-  # Root-level output dirs (also relative to styleguide/, hence "../").
-  - "../.build"
-  - "../build"
-  - "../Carthage"
-  - "../DerivedData"
-  - "../Pods"
+  # Project-root output dirs (relative to styleguide/, hence "../<project>/").
+  - "../*/.build"
+  - "../*/build"
+  - "../*/Carthage"
+  - "../*/DerivedData"
+  - "../*/Pods"
 
 # === Opt-in rules (grouped by the guide intent they serve; sorted within each group) ===
 opt_in_rules:

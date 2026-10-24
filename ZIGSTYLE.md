@@ -27,7 +27,7 @@ src/                   cli/
                          <name>.zig
 ```
 
-- B.1.b. Module-level compile-time invariants live in `module.zig`: `pub const is_debug = builtin.mode == .Debug;`.
+- B.1.b. Module-level compile-time invariants live in `module.zig`: `pub const is_debug = builtin.mode == .debug;`.
 
 ### B.2 File-Level Layout
 
@@ -57,8 +57,8 @@ test "handler" { ... }
 - B.4.a. **No shorthand aliases or namespace shorteners** — always use fully-qualified standard library paths (`std.mem.Allocator`, `std.crypto.*`); this keeps dependencies explicit and code searchable. The only permitted type alias is `const Self = @This();` inside structs.
 
 ```zig
-const mem = std.mem;                          // WRONG — shortener
-const buffer = try std.mem.alloc(u8, 1024);   // CORRECT — explicit path
+const mem = std.mem;                                // WRONG — shortener
+const found = std.mem.find(u8, haystack, needle);   // CORRECT — explicit path
 ```
 
 - B.4.b. **Import through the barrel** — import types via the local `module.zig`, never sibling files directly; the import name reflects the package role (`mod` for library, `cli` for CLI). `module.zig` re-exports every public type from its directory plus external deps; the CLI entry point imports both the library and its local CLI barrel.
@@ -155,7 +155,7 @@ pub fn deinit(self: *Self) void {
 }
 ```
 
-- D.2.b. **Allocator ownership** — the parent's allocator is always the first parameter to `init`, stored as a field; after init use `self.allocator`, never re-asking for one in helpers. A **direct allocator** frees each allocation in `deinit`; an **arena** routes all allocations through it and frees everything with one `arena.deinit()` (preferred for many same-lifetime allocations). Owned heap pointers use `create`/`destroy`. `main` pulls its allocator and `io` from the runtime-supplied `std.process.Init`; library/test code falls back to `DebugAllocator`.
+- D.2.b. **Allocator ownership** — the parent's allocator is always the first parameter to `init`, stored as a field; after init use `self.allocator`, never re-asking for one in helpers. A **direct allocator** frees each allocation in `deinit`; an **arena** routes all allocations through it and frees everything with one `arena.deinit()` (preferred for many same-lifetime allocations). Owned heap pointers use `create`/`destroy`. `main` pulls its allocator and `io` from the runtime-supplied `std.process.Init`; library code falls back to `std.heap.SafeAllocator`, tests use `std.testing.allocator`.
 
 ```zig
 fn parseEntry(allocator: std.mem.Allocator, dict: SomeDict) !Entry { ... }  // WRONG — re-asks
@@ -168,7 +168,7 @@ fn parseEntry(self: *Self, dict: SomeDict) !Entry {                          // 
 
 ```zig
 var handler = try mod.Handler.init(allocator);  defer handler.deinit();
-var file = try std.fs.cwd().createFile(name, .{});  defer file.close();
+var file = try std.Io.Dir.cwd().createFile(io, name, .{});  defer file.close(io);
 const buffer = try allocator.alloc(u8, size);  defer allocator.free(buffer);
 ```
 

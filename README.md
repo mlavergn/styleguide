@@ -2,6 +2,17 @@
 
 Code style guides for various coding languages.
 
+## Usage
+
+Clone this repo beside the projects that use it, so each project reaches it as `../styleguide`. A project's Makefile starts with:
+
+```make
+# Optional include to extend the makefile targets
+-include ../styleguide/Makefile.in
+```
+
+That supplies the canonical `make format`, `make lint`, and `make validate`. The project defines `clean`, `build`, and `test`, and sets `ZIG_DIRS`, `LINT_EXCLUDE`, or extra `validate:` prerequisites after the include when it needs to.
+
 ## Style Guides
 
 - [CONVENTIONS.md](CONVENTIONS.md) — Conventions for writing the style guides themselves (terse, imperative, rule-per-section).
@@ -15,3 +26,5 @@ Code style guides for various coding languages.
 
 - [swiftformat.cfg](swiftformat.cfg) — SwiftFormat configuration for Swift code.
 - [swiftlint.yml](swiftlint.yml) — SwiftLint rules for Swift code.
+- [zlint.json](zlint.json) — zlint rules for Zig code.
+- [Makefile.in](Makefile.in) — the canonical `format`, `lint`, and `validate` targets, included by each project's Makefile.
