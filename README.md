@@ -11,7 +11,7 @@ Clone this repo beside the projects that use it, so each project reaches it as `
 -include ../styleguide/Makefile.in
 ```
 
-That supplies the canonical `make format`, `make lint`, and `make validate`. The project defines `clean`, `build`, and `test`, and sets `ZIG_DIRS`, `LINT_EXCLUDE`, or extra `validate:` prerequisites after the include when it needs to.
+That supplies the canonical `make format`, `make lint`, `make validate`, and `make buildxpin`, which pins zigbuildx in `build.zig.zon` to its newest release. The project defines `clean`, `build`, and `test`, and sets `ZIG_DIRS`, `LINT_EXCLUDE`, or extra `validate:` prerequisites after the include when it needs to.
 
 ## Style Guides
 
@@ -28,4 +28,4 @@ That supplies the canonical `make format`, `make lint`, and `make validate`. The
 - [swiftformat.cfg](swiftformat.cfg) — SwiftFormat configuration for Swift code.
 - [swiftlint.yml](swiftlint.yml) — SwiftLint rules for Swift code.
 - [zlint.json](zlint.json) — zlint rules for Zig code.
-- [Makefile.in](Makefile.in) — the canonical `format`, `lint`, and `validate` targets, included by each project's Makefile.
+- [Makefile.in](Makefile.in) — the canonical `format`, `lint`, `validate`, and `buildxpin` targets, included by each project's Makefile.

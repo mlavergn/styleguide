@@ -13,7 +13,7 @@
 #
 ###############################################
 
-.PHONY: lint format validate
+.PHONY: lint format validate buildxpin
 
 STYLE_ROOT := ../styleguide
 
@@ -56,6 +56,12 @@ format:
 lint:
 	@out="$$(zlintpre $(LINT_FILES) 2>&1)"; echo "$$out"; echo "$$out" | grep -q 'found 0 failures' || { echo "lint: zlintpre findings above"; exit 1; }
 	@printf '%s\n' $(LINT_FILES) | zlint -c $(STYLE_ROOT) -S --deny-warnings
+
+# Pin zigbuildx in build.zig.zon to its newest release, through its
+# zigbuildx-pin step (zigbuildx 4.1.0 or later); a project without one is told how to get it.
+buildxpin:
+	@zig build -l 2>/dev/null | grep -q '^  zigbuildx-pin ' || { echo "buildxpin: no zigbuildx-pin step; it needs zigbuildx 4.1.0 or later:"; echo "  zig fetch --save=zigbuildx git+https://github.com/mlavergn/zigbuildx#v4.1.0"; exit 1; }
+	zig build zigbuildx-pin
 
 # Leave the default goal to the including Makefile's first target.
 .DEFAULT_GOAL :=
