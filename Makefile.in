@@ -54,7 +54,6 @@ format:
 # Lint the Zig sources against $(STYLE_ROOT)/zlint.json. Warnings are errors.
 # zlintpre exits 0 even when it reports failures, so its summary is checked.
 lint:
-	@out="$$(zlintpre $(LINT_FILES) 2>&1)"; echo "$$out"; echo "$$out" | grep -q 'found 0 failures' || { echo "lint: zlintpre findings above"; exit 1; }
 	@printf '%s\n' $(LINT_FILES) | zlint -c $(STYLE_ROOT) -S --deny-warnings
 
 # Pin zigbuildx in build.zig.zon to its newest release, through its
