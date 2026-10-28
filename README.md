@@ -28,4 +28,4 @@ That supplies the canonical `make format`, `make lint`, `make validate`, and `ma
 - [swiftformat.cfg](swiftformat.cfg) — SwiftFormat configuration for Swift code.
 - [swiftlint.yml](swiftlint.yml) — SwiftLint rules for Swift code.
 - [zlint.json](zlint.json) — zlint rules for Zig code.
-- [Makefile.in](Makefile.in) — the canonical `format`, `lint`, `validate`, and `buildxpin` targets, included by each project's Makefile.
+- [Makefile.in](Makefile.in) — the canonical `format`, `lint`, `validate`, and `buildxpin` targets, and `pkg` / `pkginstall` (a macOS `.pkg` built by zigpkg's `zpkg --package`), included by each project's Makefile.

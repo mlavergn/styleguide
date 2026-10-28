@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Code style guides — Markdown documents plus the SwiftLint/SwiftFormat/zlint configs that enforce them, and `Makefile.in`, the canonical `format`/`lint`/`validate`/`buildxpin` targets. No source code, no tests, nothing to run here.
+Code style guides — Markdown documents plus the SwiftLint/SwiftFormat/zlint configs that enforce them, and `Makefile.in`, the canonical `format`/`lint`/`validate`/`buildxpin` targets and the shared `pkg`/`pkginstall` (zigpkg's macOS `.pkg`). No source code, no tests, nothing to run here.
 
 Consuming projects are **siblings** of this checkout: each reaches it as `../styleguide` and starts its Makefile with `-include ../styleguide/Makefile.in`.
 
@@ -21,7 +21,7 @@ Flat — every file is at the root.
 - `CLAUDESTYLE.md`, `READMESTYLE.md` — **templates**, not guides. Skeletons of HTML comments to fill in when authoring a CLAUDE.md or README.md in another project. Follow their section order.
 - `swiftformat.cfg`, `swiftlint.yml` — the executable half of `SWIFTSTYLE.md`
 - `zlint.json` — the executable half of `ZIGSTYLE.md`; `make lint` passes `-c ../styleguide`
-- `Makefile.in` — canonical `format`, `lint`, `validate` and `buildxpin` (pins zigbuildx to its newest release) for every consuming project. Projects override `ZIG_DIRS` / `LINT_EXCLUDE` and add `validate:` prerequisites after the include; never copy the targets back into a project
+- `Makefile.in` — canonical `format`, `lint`, `validate` and `buildxpin` (pins zigbuildx to its newest release) for every consuming project. `pkg` (`zpkg --package` from the project's recipe in zigpkg's store; the `.pkg` root is flat, `--prefix-exe-dir .`, since its `postinstall` puts `/usr/local/<org>/<name>` on `PATH`; `PKG_ROOT` is handed to zpkg as `--input`; `DRY_RUN` set to anything but `0`/`no`/`false` stops before Apple and R2) and `pkginstall` (always a dry run: signed, never notarized or published). A project's own zpkg targets start with `$(PKG_CHECK)` and pass `$(PKG_DRY_RUN)`. Projects override `ZIG_DIRS` / `LINT_EXCLUDE` / `PKG_NAME` / `PKG_STEP` / `PKG_ROOT` / `PKG_BUILD` / `PKG_ARGS` and add `validate:` prerequisites after the include; never copy the targets back into a project
 - `README.md` — hand-maintained index
 
 ## Architecture conventions

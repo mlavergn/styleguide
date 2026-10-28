@@ -11,9 +11,14 @@
 # The project defines clean, build, and test, which validate runs. Settings
 # below are defaults; a project overrides them after the include.
 #
+# It also gives every project `pkg` and `pkginstall`: a macOS .pkg built by
+# zigpkg's `zpkg --package` from the project's recipe in zigpkg's store. A
+# project changes them only through the PKG_* variables, never by redefining
+# the targets.
+#
 ###############################################
 
-.PHONY: lint format validate buildxpin
+.PHONY: lint format validate buildxpin pkg pkginstall
 
 STYLE_ROOT := ../styleguide
 
@@ -38,6 +43,41 @@ LINT_FILES ?= $(filter-out $(LINT_EXCLUDE),$(ZIG_FILES))
 # The files zig fmt rewrites: every source and build.zig.zon.
 FORMAT_FILES ?= $(ZIG_FILES) $(wildcard build.zig.zon)
 
+# zigpkg's command line (../zigpkg), which builds, signs, notarizes and
+# publishes the package as the project's recipe in zigpkg's store says.
+ZPKG ?= zpkg
+
+# The `zig build` step whose executables the package installs, e.g.
+# `PKG_STEP := install` for a project whose default step is the CLI.
+PKG_STEP ?= cli
+
+# What the package installs: the recipe's default .pkg root. Flat, so the
+# executables land in /usr/local/<org>/<name>, the directory on PATH.
+PKG_ROOT ?= zig-out/pkg/root
+
+# The package's name, for pkginstall: build.zig.zon's .name unless the
+# recipe names it otherwise (then set it, e.g. `PKG_NAME := zgit`).
+PKG_NAME ?= $(shell sed -n -E 's/^[[:space:]]*\.name[[:space:]]*=[[:space:]]*\.?@?"?([^",]+)"?.*/\1/p' build.zig.zon | head -1)
+
+# The package's version: build.zig.zon's .version.
+PKG_VERSION ?= $(shell sed -n -E 's/^[[:space:]]*\.version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' build.zig.zon | head -1)
+
+# How the package's root is built, e.g. a project's own universal build.
+PKG_BUILD ?= rm -rf $(PKG_ROOT) && zig build $(PKG_STEP) --release=fast --prefix $(PKG_ROOT) --prefix-exe-dir .
+
+# The `zpkg --package` arguments: PKG_ROOT as the input, so the package holds
+# what PKG_BUILD built wherever a project puts it. A project replacing them
+# names its own `--input`, e.g. `--input <dir> --version <v>`.
+PKG_ARGS ?= --input $(PKG_ROOT)
+
+# `--dry-run` when DRY_RUN is set to anything but 0, no or false: the package
+# is built and signed, but never notarized or published.
+PKG_DRY_RUN = $(if $(filter-out 0 no false,$(DRY_RUN)),--dry-run)
+
+# A recipe's first line in any target that runs zpkg: stops when it cannot be
+# found.
+PKG_CHECK = @command -v $(ZPKG) >/dev/null || { echo "❌ $(ZPKG) not found: build ../zigpkg, or set ZPKG"; exit 1; }
+
 # ---------------------------------------------
 # Targets
 # ---------------------------------------------
@@ -59,8 +99,22 @@ lint:
 # Pin zigbuildx in build.zig.zon to its newest release, through its
 # zigbuildx-pin step (zigbuildx 4.1.0 or later); a project without one is told how to get it.
 buildxpin:
-	@zig build -l 2>/dev/null | grep -q '^  zigbuildx-pin ' || { echo "buildxpin: no zigbuildx-pin step; it needs zigbuildx 4.1.0 or later:"; echo "  zig fetch --save=zigbuildx git+https://github.com/mlavergn/zigbuildx#v4.1.0"; exit 1; }
+	@zig build -l 2>/dev/null | grep -q '^  zigbuildx-pin ' || { echo "buildxpin: no zigbuildx-pin step; it needs zigbuildx 4.1.0 or later:"; echo "  zig fetch --save=zigbuildx git+https://github.com/mlavergn/zigbuildx#v5.1.0"; exit 1; }
 	zig build zigbuildx-pin
+
+# Build the package's root, then the .pkg with zpkg, signed, notarized and
+# published as the recipe says. DRY_RUN=1 stops before Apple and R2.
+pkg:
+	$(PKG_CHECK)
+	$(PKG_BUILD)
+	$(ZPKG) --package $(PKG_ARGS) $(PKG_DRY_RUN)
+
+# Build the package as a dry run (signed, never notarized or published) and
+# install it (/usr/local/<org>/<name>), which asks for an administrator
+# password. A release is `make pkg`.
+pkginstall:
+	$(MAKE) --no-print-directory pkg DRY_RUN=1
+	sudo installer -pkg "zig-out/pkg/$(PKG_NAME)-$(PKG_VERSION).pkg" -target /
 
 # Leave the default goal to the including Makefile's first target.
 .DEFAULT_GOAL :=
