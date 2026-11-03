@@ -44,16 +44,11 @@ LINT_FILES ?= $(filter-out $(LINT_EXCLUDE),$(ZIG_FILES))
 FORMAT_FILES ?= $(ZIG_FILES) $(wildcard build.zig.zon)
 
 # zigpkg's command line (../zigpkg), which builds, signs, notarizes and
-# publishes the package as the project's recipe in zigpkg's store says.
+# publishes the package as the project's recipe in zigpkg's store says. The
+# recipe's .build says how the project is built for distribution (its step
+# and platforms, edited on zpkg's Cookbook); zpkg builds into its dropbox
+# first whenever those builds are not current.
 ZPKG ?= zpkg
-
-# The `zig build` step whose executables the package installs, e.g.
-# `PKG_STEP := install` for a project whose default step is the CLI.
-PKG_STEP ?= cli
-
-# What the package installs: the recipe's default .pkg root. Flat, so the
-# executables land in /usr/local/<org>/<name>, the directory on PATH.
-PKG_ROOT ?= zig-out/pkg/root
 
 # The package's name, for pkginstall: build.zig.zon's .name unless the
 # recipe names it otherwise (then set it, e.g. `PKG_NAME := zgit`).
@@ -62,13 +57,9 @@ PKG_NAME ?= $(shell sed -n -E 's/^[[:space:]]*\.name[[:space:]]*=[[:space:]]*\.?
 # The package's version: build.zig.zon's .version.
 PKG_VERSION ?= $(shell sed -n -E 's/^[[:space:]]*\.version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' build.zig.zon | head -1)
 
-# How the package's root is built, e.g. a project's own universal build.
-PKG_BUILD ?= rm -rf $(PKG_ROOT) && zig build $(PKG_STEP) --release=fast --prefix $(PKG_ROOT) --prefix-exe-dir .
-
-# The `zpkg --package` arguments: PKG_ROOT as the input, so the package holds
-# what PKG_BUILD built wherever a project puts it. A project replacing them
-# names its own `--input`, e.g. `--input <dir> --version <v>`.
-PKG_ARGS ?= --input $(PKG_ROOT)
+# Extra `zpkg --package` arguments, e.g. `--format deb`, or `--input <dir>`
+# for a root a project builds itself rather than through its recipe.
+PKG_ARGS ?=
 
 # `--dry-run` when DRY_RUN is set to anything but 0, no or false: the package
 # is built and signed, but never notarized or published.
@@ -102,11 +93,11 @@ buildxpin:
 	@zig build -l 2>/dev/null | grep -q '^  zigbuildx-pin ' || { echo "buildxpin: no zigbuildx-pin step; it needs zigbuildx 4.1.0 or later:"; echo "  zig fetch --save=zigbuildx git+https://github.com/mlavergn/zigbuildx#v5.1.0"; exit 1; }
 	zig build zigbuildx-pin
 
-# Build the package's root, then the .pkg with zpkg, signed, notarized and
-# published as the recipe says. DRY_RUN=1 stops before Apple and R2.
+# Build the .pkg with zpkg (its drops built first when they are not current),
+# signed, notarized and published as the recipe says. DRY_RUN=1 stops before
+# Apple and R2 (and may build from changes not committed).
 pkg:
 	$(PKG_CHECK)
-	$(PKG_BUILD)
 	$(ZPKG) --package $(PKG_ARGS) $(PKG_DRY_RUN)
 
 # Build the package as a dry run (signed, never notarized or published) and
@@ -114,7 +105,7 @@ pkg:
 # password. A release is `make pkg`.
 pkginstall:
 	$(MAKE) --no-print-directory pkg DRY_RUN=1
-	sudo installer -pkg "zig-out/pkg/$(PKG_NAME)-$(PKG_VERSION).pkg" -target /
+	sudo installer -pkg "$$($(ZPKG) --output $(PKG_ARGS))" -target /
 
 # Leave the default goal to the including Makefile's first target.
 .DEFAULT_GOAL :=

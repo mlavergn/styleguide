@@ -22,6 +22,8 @@ That supplies the canonical `make format`, `make lint`, `make validate`, and `ma
 - [ZIGMIGRATE.md](ZIGMIGRATE.md) — Zig SDK upgrade migration notes (API diffs and gotchas per version).
 - [SVELTESTYLE.md](SVELTESTYLE.md) — Svelte 5 code style and component layout (runes, props/callbacks, design tokens).
 - [SQLSTYLE.md](SQLSTYLE.md) — Database schema and normalization conventions (star schema design).
+- [TUIDESIGN.md](TUIDESIGN.md) — Terminal UI design on zigtui: top bar (name and version), body, bottom bar; shared widgets.
+- [WUIDESIGN.md](WUIDESIGN.md) — Web UI design on zigwui and viewkit: the same top bar and bottom bar as the TUI; shared components.
 
 ## Config Files
 
