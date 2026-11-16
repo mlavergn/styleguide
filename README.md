@@ -24,6 +24,7 @@ That supplies the canonical `make format`, `make lint`, `make validate`, and `ma
 - [SQLSTYLE.md](SQLSTYLE.md) — Database schema and normalization conventions (star schema design).
 - [TUIDESIGN.md](TUIDESIGN.md) — Terminal UI design on zigtui: top bar (name and version), body, bottom bar; shared widgets.
 - [WUIDESIGN.md](WUIDESIGN.md) — Web UI design on zigwui and viewkit: the same top bar and bottom bar as the TUI; shared components.
+- [GUIDESIGN.md](GUIDESIGN.md) — Native GUI design on ziggui: the same frame as the TUI, a headless core, workers, keys, modals, bundle, and headless tests.
 
 ## Config Files
 

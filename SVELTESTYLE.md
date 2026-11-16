@@ -15,9 +15,9 @@ Svelte 5 with runes.
 - Never hardcode a color. Use the design tokens. A raw hex or a stock Tailwind color bypasses the design system.
 
 ```svelte
-<p class="text-[#9aa0a6]">     <!-- WRONG — raw hex -->
-<p class="text-gray-400">      <!-- WRONG — off-system -->
-<p class="text-ink-muted">     <!-- CORRECT — token -->
+<p class="text-[#9aa0a6]">                <!-- WRONG — raw hex -->
+<p class="text-gray-400">                 <!-- WRONG — off-system -->
+<p class="text-foreground-secondary">     <!-- CORRECT — token -->
 ```
 
 - Never define the design tokens in more than one place. A second `@theme` block makes two screens in the same window disagree.

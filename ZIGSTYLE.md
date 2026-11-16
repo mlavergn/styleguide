@@ -69,6 +69,22 @@ const claims_mod = @import("claims.zig");     // WRONG — direct file import
 ```
 
 - B.4.c. Prefer `std.Io` over `std.posix` — avoid `std.posix` unless irreplaceable, reaching for the corresponding `std.Io` API first.
+- B.4.d. **The library never depends on a front end** — library code (`src/`) holds no TUI, WUI or GUI concept (views, keys, menus, themes, focus, notices) and imports no UI toolkit; its barrel re-exports only what the library's own API takes or returns, never a type added for one front end's convenience. Behaviour every front end shares enters the library as plain state and data; a helper one front end needs lives in that front end's directory (`cli/`, `web/`, `app/`). An adopter that wants only the library never inherits a UI.
+
+```zig
+// src/module.zig
+pub const Download = @import("client.zig").Download;              // CORRECT — `Client.listDownloads` returns it
+pub const RowMenu = @import("row_menu.zig").RowMenu;              // WRONG — a GUI concept in the library
+```
+
+- B.4.e. **Front-end dependencies are lazy and root-only** — mark every front end's dependency (UI toolkit, web server) `.lazy` in `build.zig.zon`, declare the front ends in a function `build()` calls only when the package is the root, and run any sibling-cloning pre-flight there too. A package taking yours for its library then fetches and compiles only the library's dependencies.
+
+```zig
+.zigtui = .{ .path = "../zigtui", .lazy = true },                 // build.zig.zon
+if (b.isRoot()) zigbuildx.Deps.cloneMissing(b, zon);              // CORRECT — the root build only
+if (b.isRoot()) try addFrontEnds(b, cfg, module, tests_step);     // CORRECT — `b.dependencyLazy` inside
+const tui_dep = b.dependency("zigtui", .{});                      // WRONG — in `build()`, every adopter fetches it
+```
 
 ## C. Code Construction & Logic
 

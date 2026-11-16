@@ -20,11 +20,11 @@ zigwui/viewkit/components/DirectoryPicker.svelte   // Good — shared component
 myapp/views/src/components/DirectoryPicker.svelte  // Bad  — app-local copy
 ```
 
-- A.1.c. Never hardcode a color. Use viewkit's design tokens (`viewkit/app.css`) — one palette across WUIs.
+- A.1.c. Never hardcode a color. Use viewkit's design tokens (`themes.zon`, generated into `viewkit/themes.css`) — one palette per theme across WUIs.
 
 ```svelte
-<span class="text-ink-muted">   <!-- Good -->
-<span class="text-[#9aa0a6]">   <!-- Bad — raw hex -->
+<span class="text-foreground-secondary">   <!-- Good -->
+<span class="text-[#9aa0a6]">              <!-- Bad — raw hex -->
 ```
 
 ## B. Architecture & File Organization
@@ -48,11 +48,11 @@ myapp/views/src/components/DirectoryPicker.svelte  // Bad  — app-local copy
 
 ### C.1 Logic Layout & Readability
 
-- C.1.a. **Top bar**: one row, pinned. Display name and version first, in `font-header`; version in `font-mono text-ink-muted`.
+- C.1.a. **Top bar**: one row, pinned. Display name and version first, in `font-header`; version in `font-mono text-foreground-secondary`.
 
 ```svelte
-<h1 class="font-header">{state.display_name}</h1><span class="font-mono text-ink-muted">v{state.version}</span>  <!-- Good -->
-<h1>myapp</h1>                                                                                                     <!-- Bad — binary name, no version -->
+<h1 class="font-header">{state.display_name}</h1><span class="font-mono text-foreground-secondary">v{state.version}</span>  <!-- Good -->
+<h1>myapp</h1>                                                                                                              <!-- Bad — binary name, no version -->
 ```
 
 - C.1.b. Top bar after the name: app context (working directory, links, mode), truncated first; connection and lock state at the right edge.
