@@ -190,9 +190,17 @@ const buffer = try allocator.alloc(u8, size);  defer allocator.free(buffer);
 
 ### D.3 Logging, Diagnostics & Telemetry
 
-- D.3.a. **Logging** — every file declares a scoped logger tagged `.<project>_<module>` (`std.log.scoped(.myproject_parser)`). Functions trace entry with `@src()`: `log.debug("{s}:{d} :: {s}", .{ @src().file, @src().line, @src().fn_name })`. The executable configures level and log function via `std_options`.
+- D.3.a. **Logging** — every file declares a scoped logger tagged `.<project>_<module>` (`std.log.scoped(.myproject_parser)`); a file with nothing to trace (a barrel, a pure helper) keeps it with `_ = log;` and `// Nothing here does I/O to trace.` in its `test` block. Trace entry with `@src()` — `log.debug("{s}:{d} :: {s}", .{ @src().file, @src().line, @src().fn_name })` — **only at entry points**: `main`, the lifecycle of stateful types (`init`, `deinit`, `load`, `unload`), and the public calls that start or stop work (`run`, `connect`, `subscribe`, `cancel`). Never trace per-item or per-frame paths (callbacks, iterators, event handlers, render and layout passes, view constructors): a Debug build logs `debug` by default, so a trace there floods stderr for every program built on the code. The executable configures level and log function via `std_options`.
 
 ```zig
+pub fn init(allocator: std.mem.Allocator, io: std.Io) !Self {
+    log.debug("{s}:{d} :: {s}", .{ @src().file, @src().line, @src().fn_name });  // CORRECT — entry point
+    ...
+}
+pub fn onNext(self: *Self, value: T) void {
+    log.debug("{s}:{d} :: {s}", .{ @src().file, @src().line, @src().fn_name });  // WRONG — runs per item
+    ...
+}
 pub const std_options: std.Options = .{ .log_level = .debug, .logFn = mylib.Logger.logFn };
 ```
 
